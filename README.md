@@ -5,7 +5,7 @@
 
 ## Introduction
 
- Google Merchandise Store (also known as GStore, where Google swag is sold) customer dataset to predict revenue per customer. Google partned with RStudio on showing the impact of analytics to show the power of R and also provide opportunity to show operational impact for Google Store operations.
+Google Merchandise Store (also known as GStore, where Google swag is sold) customer dataset to predict revenue per customer. Google partned with RStudio on showing the impact of analytics to show the power of R and also provide opportunity to show operational impact for Google Store operations.
 
 I.e. (per documentation),
  >  "RStudio, the developer of free and open tools for R and enterprise-ready products for teams to scale and share work, has partnered with Google Cloud and Kaggle to demonstrate the business impact that thorough data analysis can have."
