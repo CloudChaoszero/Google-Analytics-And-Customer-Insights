@@ -28,5 +28,10 @@ Coming soon....
 
 1. [GA Customer Analytics Data Source](https://www.kaggle.com/c/ga-customer-revenue-prediction/overview)
 
+2. [BRD](Analytics/BRD.md)
+
+3. [Analytics](Analytics/)
+
+4. [Data Engineering](Data-Engineering/)
 
 ## FAQ
