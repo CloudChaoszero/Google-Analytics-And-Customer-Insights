@@ -1,8 +1,8 @@
+import os
 import warnings
 warnings.filterwarnings("ignore")
 
 import pandas as pd
-
 
 parse_dates = ['date']
 ga_trainDf = pd.read_csv('../Resources/Data/ZipFiles/train_v2.csv.zip',\
@@ -80,7 +80,11 @@ def trafficSource_cleaning(trafficString):
     trafficHash = {}
     for keyVal in trafficList_cleaned[:-1]:
         parsedItems= keyVal.split(":")
-        trafficHash[parsedItems[0]] = parsedItems[1]
+        if len(parsedItems) > 1:
+            trafficHash[parsedItems[0]] = parsedItems[1]
+        else:
+            trafficHash["N/A"] = "(not set)"
+
     hasKeyList = list(trafficHash.keys())
     if "campaign" not in hasKeyList:
         trafficHash["campaign"] = "(not set)"
@@ -99,37 +103,10 @@ def trafficSource_cleaning(trafficString):
     '''for all key pairs being mapped in hash, if one a key is not in a list, then input values'''
     '''from that hash, we then create columns our of each key-value pair'''
     
-ga_trainDf['trafficSource'][:10].transform(lambda x: trafficSource_cleaning(x)["source"])
-
+    
+ga_trainDf['trafficSource'] = ga_trainDf['trafficSource'].transform(lambda x: trafficSource_cleaning(x)["source"])
 
 ga_trainDf.drop(['customDimensions','device','geoNetwork','geoNetwork_new','totals','trafficSource','totals_new'], axis = 1, inplace=True)
 
-toCsvPath = os.path.join()
-ga_trainDf.to_csv(path_or_buf='', index=False)
-'''
-
-['channelGrouping',
- 'customDimensions',
- 'date',
- 'device',
- 'fullVisitorId',
- 'geoNetwork',
- 'hits',
- 'socialEngagementType',
- 'totals',
- 'trafficSource',
- 'visitId',
- 'visitNumber',
- 'visitStartTime',
- 'geoNetwork_new',
- 'Continent',
- 'Sub-Continent',
- 'totals_new',
- 'visits',
- 'pageviews',
- 'bounces',
- 'newVisits',
- 'sessionQualityDim',
- 'deviceType',
- 'Region']
-'''
+toCsvPath = os.path.join('..', 'Resources','Data','PreparedData','ga_analytics_filtered_dataset.csv')
+ga_trainDf.to_csv(path_or_buf=toCsvPath, index=False)
