@@ -1,6 +1,6 @@
 mkdir -p ../Resources/Data/ZipFiles
 mkdir -p ../Resources/Data/RawData
-
+mkdir -p ../Resources/Data/PreparedData
 
 kaggle competitions download -c ga-customer-revenue-prediction -p ../Resources/Data/ZipFiles
 
