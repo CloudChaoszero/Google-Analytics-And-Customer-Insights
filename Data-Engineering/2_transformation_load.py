@@ -4,62 +4,33 @@ warnings.filterwarnings("ignore")
 
 import pandas as pd
 
+from misc_functions import string_cleaning, geographic_parse, sessionInput
+from misc_functions import marketing_metrics_parser,trafficSource_cleaning
+
+#Import First 100,000 datapoints from .zip file
 parse_dates = ['date']
-ga_trainDf = pd.read_csv('../Resources/Data/ZipFiles/train_v2.csv.zip',\
-                            compression='zip',nrows=100000, parse_dates=parse_dates,
+ga_trainDf = pd.read_csv('../Resources/Data/ZipFiles/train_v2.csv.zip',
+                        compression='zip',nrows=100000, 
+                        parse_dates=parse_dates,
                         skiprows=lambda i: i % 10 != 0)
 
+#Create transformed Geo and Continent Columns
 
-
-def string_cleaning(rawString):
-    convertedString = rawString.replace("\"","")\
-                        .replace("\'","")\
-                        .replace("{","")\
-                        .replace("}","")\
-                        .split(',')
-    return(convertedString)
-
-def geographic_parse(rawString):
-    convertStr = string_cleaning(rawString)
-    return(convertStr[0], convertStr[1])
-# ga_trainDf['geoNetwork'][0].replace("\"","").replace("\'","").replace("{","").replace("}","").split(',')
 ga_trainDf['geoNetwork_new'] = ga_trainDf['geoNetwork'].transform(geographic_parse)
-ga_trainDf['Continent'] = ga_trainDf['geoNetwork_new'].transform(lambda x: x[0].split(":")[1])
-ga_trainDf['Sub-Continent'] = ga_trainDf['geoNetwork_new'].transform(lambda x: x[1].split(":")[1])
+
+ga_trainDf['Continent'] = ga_trainDf['geoNetwork_new'].transform(\
+                                  lambda x: x[0].split(":")[1])
+ga_trainDf['Sub-Continent'] = ga_trainDf['geoNetwork_new'].transform(\
+                                  lambda x: x[1].split(":")[1])
 
 
-def sessionInput(string):
-    stringFormatted = 0
-    try:
-        stringFormatted = int(string[5].split(":")[1])
-    
-    except:
-        stringFormatted = 0
-    return 0
-
-
+# Create transformed Totals Column
 ga_trainDf['totals_new'] = ga_trainDf['totals'].apply(string_cleaning)
 
 
-'''
-marketing_metrics_parser
-Param 1: metricsArray
-Param 2; index
-
-Impute 0 value for missing marketing metrics from
-original dictionary or list (e.g. A returned row 
-would have visits and hits, but no pageviews data
---thus hitting and error)
-'''
-def marketing_metrics_parser(metricsArray, index):
-    try:
-        return(metricsArray[index].split(":")[1])
-    except:
-        return(0)
-        
-
-##Segment: visits,hits, pageviews, bounces, newVisits, sessionQualityDim
+# Segment: visits,hits, pageviews, bounces, newVisits, sessionQualityDim
 ga_trainDf['visits'] = ga_trainDf['totals_new'].apply(marketing_metrics_parser,index=(0))
+
 ga_trainDf['hits'] = ga_trainDf['totals_new'].transform(marketing_metrics_parser,index=(1)) 
 ga_trainDf['pageviews'] = ga_trainDf['totals_new'].transform(marketing_metrics_parser,index=(2))
 ga_trainDf['bounces'] = ga_trainDf['totals_new'].transform(marketing_metrics_parser,index=(3)) 
@@ -67,46 +38,29 @@ ga_trainDf['newVisits'] = ga_trainDf['totals_new'].transform(marketing_metrics_p
 ga_trainDf['sessionQualityDim'] = ga_trainDf['totals_new'].transform(sessionInput)
 
 
+# Extract Device Type information
 ga_trainDf['deviceType'] = ga_trainDf['device'].apply(\
                     lambda x: x.split(',')[0][13:-1])
 
 
+# Extract Region Type information
 ga_trainDf['Region'] = ga_trainDf.customDimensions.apply(\
                                         lambda x: x[x.find('\'value\':')+10:-3])
 
 
-def trafficSource_cleaning(trafficString):
-    trafficList_cleaned = string_cleaning(trafficString)
-    trafficHash = {}
-    for keyVal in trafficList_cleaned[:-1]:
-        parsedItems= keyVal.split(":")
-        if len(parsedItems) > 1:
-            trafficHash[parsedItems[0]] = parsedItems[1]
-        else:
-            trafficHash["N/A"] = "(not set)"
+# Parse Traffice Source information    
+ga_trainDf['trafficSource'] = ga_trainDf['trafficSource'].transform(\
+                                      lambda x: trafficSource_cleaning(x)["source"])
 
-    hasKeyList = list(trafficHash.keys())
-    if "campaign" not in hasKeyList:
-        trafficHash["campaign"] = "(not set)"
-    if "referralPath" not in hasKeyList:
-        trafficHash["referralPath"] = "(not set)"
-    if "source" not in hasKeyList:
-        trafficHash["source"] = "(not set)"
-    if "medium" not in hasKeyList:
-        trafficHash["medium"] = "(not set)"
-    if "keyword" not in hasKeyList:
-        trafficHash["keyword"] = "(not set)"
-    if "adwordsClickInfo" not in hasKeyList:
-        trafficHash["adwordsClickInfo"] = "(not set)"
-    return(trafficHash)
-        
-    '''for all key pairs being mapped in hash, if one a key is not in a list, then input values'''
-    '''from that hash, we then create columns our of each key-value pair'''
-    
-    
-ga_trainDf['trafficSource'] = ga_trainDf['trafficSource'].transform(lambda x: trafficSource_cleaning(x)["source"])
+#Drop misc. columns for targeted data export
+dropColumnsList = ['customDimensions','device','geoNetwork',
+                   'geoNetwork_new','totals','trafficSource',
+                   'totals_new']
 
-ga_trainDf.drop(['customDimensions','device','geoNetwork','geoNetwork_new','totals','trafficSource','totals_new'], axis = 1, inplace=True)
+ga_trainDf.drop(dropColumnsList, 
+                axis = 1, 
+                inplace=True)
 
-toCsvPath = os.path.join('..', 'Resources','Data','PreparedData','ga_analytics_filtered_dataset.csv')
+toCsvPath = os.path.join('..', 'Resources','Data',
+                         'PreparedData','ga_analytics_filtered_dataset.csv')
 ga_trainDf.to_csv(path_or_buf=toCsvPath, index=False)
