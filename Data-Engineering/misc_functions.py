@@ -81,3 +81,30 @@ def trafficSource_cleaning(trafficString):
     if "adwordsClickInfo" not in hasKeyList:
         trafficHash["adwordsClickInfo"] = "(not set)"
     return(trafficHash)
+
+
+
+def hit_productPrice_agg(raw_hit_string):
+    
+    #Modify String to remove ', True", and d's items
+    modifiedString = raw_hit_string.replace("'", '"').replace(\
+                            "True","\"True\"").replace(\
+                            "d\"s","ds")
+    
+    # Partition Modified string into array by ',' delim
+    modifiedStringArray = modifiedString.split(",")
+
+#    # Obtain all Product Name occurences from hit record
+#     productNames = [i.replace("\"","") for i in modifiedStringArray if i.find("v2ProductName") != -1]
+    
+    # Obtain all Pricing occurences from hit record, respective 
+    # from the above productNames list.
+    # Note: Exclude first blank value in string
+    productPrices = [i.replace("\"","")[1:] for i in modifiedStringArray if i.find("productPrice") != -1]
+
+    # Obtain the value/100000 from key-pair value in each row
+    productSum_estimated = [int(i.split(":")[1])/100000 for i in productPrices]
+
+    # Sum expected total Order Value from Cart.
+    estimatedAggTotal = sum(productSum_estimated)
+    return(estimatedAggTotal)
